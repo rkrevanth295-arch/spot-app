@@ -17,30 +17,42 @@ interface Spot {
 }
 
 const categoryStyles: { [key: string]: { icon: string; color: string; bg: string } } = {
-  'Cafes':         { icon: '☕', color: '#fff', bg: '#C0392B' },
-  'Street Eats':   { icon: '🍔', color: '#fff', bg: '#E74C3C' },
-  'Food':          { icon: '🍔', color: '#fff', bg: '#E74C3C' },
-  'Nature Fix':    { icon: '🌿', color: '#fff', bg: '#27AE60' },
-  'Nature':        { icon: '🌿', color: '#fff', bg: '#27AE60' },
-  'Study Mode':    { icon: '📚', color: '#fff', bg: '#2980B9' },
-  'Study':         { icon: '📚', color: '#fff', bg: '#2980B9' },
-  'Date Spot':     { icon: '💕', color: '#fff', bg: '#E91E63' },
-  'Couple':        { icon: '💕', color: '#fff', bg: '#E91E63' },
-  'Biker Trails':  { icon: '🏍️', color: '#fff', bg: '#E67E22' },
-  'Photoshoot':    { icon: '📸', color: '#fff', bg: '#8E44AD' },
-  'Smoke Spot':    { icon: '🍃', color: '#fff', bg: '#2C3E50' },
-  'Sunset Point':  { icon: '🌅', color: '#fff', bg: '#F39C12' },
-  'Sunset':        { icon: '🌅', color: '#fff', bg: '#F39C12' },
-  'Hidden Gem':    { icon: '💎', color: '#fff', bg: '#6C3483' },
-  'Night Out':     { icon: '🎉', color: '#fff', bg: '#1A5276' },
-  'Nightlife':     { icon: '🎉', color: '#fff', bg: '#1A5276' },
-  'Skate/Street':  { icon: '🛹', color: '#fff', bg: '#0E6655' },
-  'Live Music':    { icon: '🎵', color: '#fff', bg: '#6C3483' },
-  'Run/Walk':      { icon: '🏃', color: '#fff', bg: '#117A65' },
-  'Peace Mode':    { icon: '🧘', color: '#fff', bg: '#7DCEA0' },
-  'Gaming Zone':   { icon: '🎯', color: '#fff', bg: '#1F618D' },
-  'Rainy Day':     { icon: '🌧️', color: '#fff', bg: '#5D6D7E' },
-  'Adventure':     { icon: '🏔️', color: '#fff', bg: '#16A085' },
+  'Sunset Points':     { icon: '🌇', color: '#fff', bg: '#FF6B4A' },
+  'Late Night Runs':   { icon: '🌙', color: '#fff', bg: '#5D6D7E' },
+  'Cheap Thrills':     { icon: '☕', color: '#fff', bg: '#F5A623' },
+  'Aesthetic AF':      { icon: '📸', color: '#fff', bg: '#9B6BFF' },
+  'Green Escape':      { icon: '🌳', color: '#fff', bg: '#27AE60' },
+  'Old City Secrets':  { icon: '🏛️', color: '#fff', bg: '#C0392B' },
+  'Creative Corners':  { icon: '🎨', color: '#fff', bg: '#8E44AD' },
+  'Bike Points':       { icon: '🏍️', color: '#fff', bg: '#E67E22' },
+  'Chill & Study':     { icon: '🎧', color: '#fff', bg: '#4AE0C4' },
+  'Underrated AF':     { icon: '🔥', color: '#fff', bg: '#E74C3C' },
+  'Group Hangout':     { icon: '🎉', color: '#fff', bg: '#3498DB' },
+  'Monsoon Special':   { icon: '🌧️', color: '#fff', bg: '#2C3E50' },
+  'Local Bazaar':      { icon: '🛍️', color: '#fff', bg: '#F39C12' },
+  'Street Food Trail': { icon: '🍜', color: '#fff', bg: '#FF6B9B' },
+  'Waterside':         { icon: '🌊', color: '#fff', bg: '#2980B9' },
+  'Adrenaline Zone':   { icon: '🎢', color: '#fff', bg: '#E74C3C' },
+  'Late Night Eats':   { icon: '🕯️', color: '#fff', bg: '#D35400' },
+  'Culture Fix':       { icon: '🎭', color: '#fff', bg: '#8E44AD' },
+  'City Lights View':  { icon: '🌃', color: '#fff', bg: '#1A5276' },
+  'Pet-Friendly':      { icon: '🐾', color: '#fff', bg: '#27AE60' },
+  'Gaming Zones':      { icon: '🎮', color: '#fff', bg: '#1F618D' },
+  'Weekend Getaway':   { icon: '🏕️', color: '#fff', bg: '#117A65' },
+  'Peace Out':         { icon: '🧘', color: '#fff', bg: '#7DCEA0' },
+  'Drink & Chill':     { icon: '🍺', color: '#fff', bg: '#F5A623' },
+  'Movie Nights':      { icon: '🎬', color: '#fff', bg: '#C0392B' },
+  'Skate Spots':       { icon: '🛹', color: '#fff', bg: '#0E6655' },
+  'Instagram Bloom':   { icon: '🌸', color: '#fff', bg: '#FF6B9B' },
+  'Hidden Ruins':      { icon: '🗿', color: '#fff', bg: '#6C3483' },
+  'First Date Spots':  { icon: '🤝', color: '#fff', bg: '#E91E63' },
+  'Smoke Points':      { icon: '💨', color: '#fff', bg: '#B8E986' },
+  'Cafes':             { icon: '☕', color: '#fff', bg: '#C0392B' },
+  'Food':              { icon: '🍔', color: '#fff', bg: '#E74C3C' },
+  'Nature':            { icon: '🌿', color: '#fff', bg: '#27AE60' },
+  'Study':             { icon: '📚', color: '#fff', bg: '#2980B9' },
+  'Hidden Gem':        { icon: '💎', color: '#fff', bg: '#6C3483' },
+  'Adventure':         { icon: '🏔️', color: '#fff', bg: '#16A085' },
 };
 
 const createPinIcon = (category: string) => {
@@ -72,21 +84,35 @@ const createPinIcon = (category: string) => {
   });
 };
 
-const Map: React.FC<{ selectedCategory?: string }> = ({ selectedCategory = 'All' }) => {
+const Map: React.FC<{ selectedCategory?: string; searchQuery?: string; compact?: boolean }> = ({ selectedCategory = 'All', searchQuery = '', compact = false }) => {
   const [spots, setSpots] = useState<Spot[]>([]);
   const [selectedSpot, setSelectedSpot] = useState<Spot | null>(null);
 
   useEffect(() => {
-    const url = selectedCategory === 'All' ? '/spots/' : `/spots/?category=${encodeURIComponent(selectedCategory)}`;
+    let url = '/spots/';
+    const params: string[] = [];
+    
+    if (selectedCategory !== 'All') {
+      params.push(`category=${encodeURIComponent(selectedCategory)}`);
+    }
+    if (searchQuery.trim()) {
+      url = '/spots/search/';
+      params.push(`q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+    
+    if (params.length > 0) {
+      url += '?' + params.join('&');
+    }
+    
     api.get(url)
       .then((res: any) => setSpots(res.data))
       .catch((err: any) => console.error('Failed:', err));
-  }, [selectedCategory]);
+  }, [selectedCategory, searchQuery]);
 
   return (
     <div className="flex flex-col md:flex-row gap-4">
       <div className="flex-1">
-        <MapContainer center={hyderabadCenter} zoom={12} style={{ height: '550px', width: '100%', borderRadius: '12px' }}>
+        <MapContainer center={hyderabadCenter} zoom={12} style={{ height: compact ? '300px' : '550px', width: '100%', borderRadius: '12px' }}>
           <TileLayer
             attribution='&copy; CartoDB'
             url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
@@ -106,7 +132,7 @@ const Map: React.FC<{ selectedCategory?: string }> = ({ selectedCategory = 'All'
         </MapContainer>
       </div>
 
-      {selectedSpot && (
+      {selectedSpot && !compact && (
         <div className="w-full md:w-80 bg-gray-900 rounded-xl shadow-lg p-4 text-white">
           {selectedSpot.image_url && (
             <img src={selectedSpot.image_url} alt={selectedSpot.name} className="w-full h-48 object-cover rounded-lg mb-3" />

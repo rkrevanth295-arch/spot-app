@@ -49,6 +49,7 @@ class SpotCreate(BaseModel):
     latitude: float
     longitude: float
     image_url: Optional[str] = None
+    verification_status: Optional[str] = "verified"
 
 
 class SpotResponse(BaseModel):
@@ -61,6 +62,7 @@ class SpotResponse(BaseModel):
     longitude: float
     image_url: Optional[str]
     status: str
+    verification_status: Optional[str] = None
     created_at: datetime
 
     class Config:

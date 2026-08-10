@@ -30,7 +30,7 @@ class Spot(Base):
     image_url = Column(String(500))
     status = Column(String(15), default="pending")
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-
+    verification_status = Column(String(20), default="verified")  # verified, approximate, unverified
 
 class SavedSpot(Base):
     __tablename__ = "saved_spots"
