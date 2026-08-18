@@ -44,6 +44,7 @@ class Token(BaseModel):
 
 class SpotCreate(BaseModel):
     name: str
+    place: Optional[str] = None
     category: str
     description: Optional[str] = None
     latitude: float
@@ -56,12 +57,14 @@ class SpotResponse(BaseModel):
     id: UUID
     user_id: UUID
     name: str
+    place: Optional[str] = None
     category: str
     description: Optional[str]
     latitude: float
     longitude: float
     image_url: Optional[str]
     status: str
+    verification_status: Optional[str] = None
     verification_status: Optional[str] = None
     created_at: datetime
 

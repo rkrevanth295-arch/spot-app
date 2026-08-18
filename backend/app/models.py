@@ -23,6 +23,7 @@ class Spot(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), nullable=False)
     name = Column(String(100), nullable=False)
+    place = Column(String(100), nullable=True)
     category = Column(String(30), nullable=False)
     description = Column(String(1000))
     latitude = Column(Float, nullable=False)

@@ -1,0 +1,17 @@
+<svg viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+  <!-- Orange circle background -->
+  <circle cx="250" cy="150" r="110" fill="#FF8C42"/>
+  
+  <!-- Inner white circle -->
+  <circle cx="250" cy="150" r="90" fill="white"/>
+  
+  <!-- Dark center dot -->
+  <circle cx="250" cy="150" r="25" fill="#1a1a2e"/>
+  
+  <!-- Curved shape (like a P or question mark) -->
+  <path d="M 280 240 Q 320 240 340 220 Q 360 200 360 150 Q 360 100 340 80 Q 320 60 280 60 Q 240 60 220 80 L 220 280 Q 220 320 240 340 Q 260 360 290 360 Q 320 360 340 340 L 310 310 Q 300 320 290 320 Q 270 320 260 310 L 260 120 Q 270 110 280 110 Q 300 110 310 130 Q 320 150 320 180 Q 320 220 300 240 Z" fill="#FF6B4A"/>
+  
+  <!-- Text -->
+  <text x="250" y="440" font-size="80" font-weight="900" text-anchor="middle" fill="#1a1a2e" font-family="Arial, sans-serif">SPOT</text>
+  <text x="250" y="480" font-size="24" text-anchor="middle" fill="#666" font-family="Arial, sans-serif" letter-spacing="4">DISCOVER. SHARE. EXPERIENCE.</text>
+</svg>

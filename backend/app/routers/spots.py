@@ -17,6 +17,7 @@ def create_spot(
     new_spot = models.Spot(
         user_id=current_user.id,
         name=spot_data.name,
+        place=spot_data.place,
         category=spot_data.category,
         description=spot_data.description,
         latitude=spot_data.latitude,
@@ -71,6 +72,7 @@ def update_spot(spot_id: str, spot_data: schemas.SpotCreate, db: Session = Depen
     if spot.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not your spot")
     spot.name = spot_data.name
+    spot.place = spot_data.place
     spot.category = spot_data.category
     spot.description = spot_data.description
     spot.latitude = spot_data.latitude
