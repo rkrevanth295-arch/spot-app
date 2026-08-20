@@ -7,7 +7,7 @@ router = APIRouter(prefix="/ai", tags=["AI"])
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
-MODEL = "qwen/qwen3.6-27b"
+MODEL = "openai/gpt-oss-120b"
 
 class TripRequest(BaseModel):
     budget: str
