@@ -38,10 +38,10 @@ const AIChatWidget: React.FC = () => {
 
   return (
     <>
-      {/* AI button LEFT of Plan — fixed position */}
+      {/* AI button LEFT of Plan — fine-tuned position */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-16 right-32 z-[1000] bg-[#151A1F]/80 backdrop-blur-xl rounded-full px-4 py-2 border border-[rgba(255,255,255,0.08)] flex items-center gap-1.5 text-sm text-[#F5F5F0]"
+        className="fixed top-16 right-36 z-[1000] bg-[#151A1F]/80 backdrop-blur-xl rounded-full px-4 py-2 border border-[rgba(255,255,255,0.08)] flex items-center gap-1.5 text-sm text-[#F5F5F0]"
       >
         <MessageCircle className="w-3.5 h-3.5 text-[#FF6B4A]" /> AI
       </button>
