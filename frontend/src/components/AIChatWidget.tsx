@@ -1,0 +1,91 @@
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { MessageCircle, Send, X } from 'lucide-react';
+import api from '../services/api';
+
+const AIChatWidget: React.FC = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [messages, setMessages] = useState<{ role: 'user' | 'ai'; text: string }[]>([
+    { role: 'ai', text: 'Hey! Ask me about hidden spots in Hyderabad 🌟' }
+  ]);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const sendMessage = async () => {
+    if (!input.trim()) return;
+    const userMsg = input.trim();
+    setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
+    setInput('');
+    setLoading(true);
+    try {
+      const res = await api.post('/ai/chat', { message: userMsg });
+      setMessages(prev => [...prev, { role: 'ai', text: res.data.reply }]);
+    } catch {
+      setMessages(prev => [...prev, { role: 'ai', text: 'Sorry, AI is taking a nap. Try again!' }]);
+    }
+    setLoading(false);
+  };
+
+  return (
+    <>
+      {/* Floating button */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="fixed bottom-24 right-4 z-[2000] w-14 h-14 rounded-full bg-gradient-to-br from-[#FF6B4A] to-[#F5A623] text-white flex items-center justify-center shadow-[0_0_30px_rgba(255,107,74,0.4)]"
+      >
+        {isOpen ? <X className="w-6 h-6" /> : <MessageCircle className="w-6 h-6" />}
+      </button>
+
+      {/* Chat panel */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 50, scale: 0.9 }}
+            className="fixed bottom-40 right-4 z-[2000] w-[calc(100%-2rem)] max-w-sm bg-[#151A1F] rounded-2xl border border-[rgba(255,255,255,0.08)] shadow-2xl overflow-hidden"
+          >
+            <div className="bg-[#0B0E11] px-4 py-3 flex items-center gap-2">
+              <span className="text-lg">🤖</span>
+              <span className="font-semibold text-sm">SPOT AI</span>
+            </div>
+            <div className="h-72 overflow-y-auto p-4 space-y-3">
+              {messages.map((msg, i) => (
+                <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[80%] px-3 py-2 rounded-2xl text-sm ${
+                    msg.role === 'user'
+                      ? 'bg-[#FF6B4A] text-white rounded-br-md'
+                      : 'bg-[#0B0E11] text-[#F5F5F0] rounded-bl-md'
+                  }`}>
+                    {msg.text}
+                  </div>
+                </div>
+              ))}
+              {loading && (
+                <div className="flex justify-start">
+                  <div className="bg-[#0B0E11] px-3 py-2 rounded-2xl text-sm text-[#8A8F98]">
+                    Thinking...
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="p-3 flex gap-2 border-t border-[rgba(255,255,255,0.06)]">
+              <input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+                placeholder="Ask about spots..."
+                className="flex-1 bg-[#0B0E11] px-3 py-2 rounded-xl text-sm text-[#F5F5F0] outline-none"
+              />
+              <button onClick={sendMessage} className="w-10 h-10 rounded-xl bg-[#FF6B4A] flex items-center justify-center">
+                <Send className="w-4 h-4 text-white" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+};
+
+export default AIChatWidget;

@@ -6,6 +6,7 @@ import Map from './components/Map';
 import SpotDetail from './components/SpotDetail';
 import BottomNav from './components/BottomNav';
 import api from './services/api';
+import AIChatWidget from './components/AIChatWidget';
 
 interface Spot {
   id: string; name: string; category: string; description: string;
@@ -241,6 +242,7 @@ export default function HomePage() {
       <AnimatePresence>
         {selectedSpot && <SpotDetail spot={selectedSpot} onClose={handleCloseDetail} />}
       </AnimatePresence>
+<AIChatWidget />
 
       {/* BOTTOM NAV */}
       <BottomNav />
