@@ -28,26 +28,31 @@ const AIChatWidget: React.FC = () => {
 
   return (
     <>
-      {/* Floating button */}
+      {/* Small AI button next to Plan — same size, no overlap */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-24 right-4 z-[2000] w-14 h-14 rounded-full bg-gradient-to-br from-[#FF6B4A] to-[#F5A623] text-white flex items-center justify-center shadow-[0_0_30px_rgba(255,107,74,0.4)]"
+        className="fixed top-16 right-20 z-[1000] bg-[#151A1F]/80 backdrop-blur-xl rounded-full px-4 py-2 border border-[rgba(255,255,255,0.08)] flex items-center gap-1.5 text-sm text-[#F5F5F0]"
       >
-        {isOpen ? <X className="w-6 h-6" /> : <MessageCircle className="w-6 h-6" />}
+        <MessageCircle className="w-3.5 h-3.5 text-[#FF6B4A]" /> AI
       </button>
 
-      {/* Chat panel */}
+      {/* Chat panel — opens below top bar, doesn't overlap bottom nav */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 50, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 50, scale: 0.9 }}
-            className="fixed bottom-40 right-4 z-[2000] w-[calc(100%-2rem)] max-w-sm bg-[#151A1F] rounded-2xl border border-[rgba(255,255,255,0.08)] shadow-2xl overflow-hidden"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="fixed top-28 right-4 z-[2000] w-[calc(100%-2rem)] max-w-sm bg-[#151A1F] rounded-2xl border border-[rgba(255,255,255,0.08)] shadow-2xl overflow-hidden"
           >
-            <div className="bg-[#0B0E11] px-4 py-3 flex items-center gap-2">
-              <span className="text-lg">🤖</span>
-              <span className="font-semibold text-sm">SPOT AI</span>
+            <div className="bg-[#0B0E11] px-4 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">🤖</span>
+                <span className="font-semibold text-sm">SPOT AI</span>
+              </div>
+              <button onClick={() => setIsOpen(false)}>
+                <X className="w-4 h-4 text-[#8A8F98]" />
+              </button>
             </div>
             <div className="h-72 overflow-y-auto p-4 space-y-3">
               {messages.map((msg, i) => (
