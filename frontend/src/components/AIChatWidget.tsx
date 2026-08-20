@@ -11,6 +11,16 @@ const AIChatWidget: React.FC = () => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const cleanText = (text: string) => {
+    return text
+      .replace(/\*\*/g, '')
+      .replace(/\*/g, '')
+      .replace(/\//g, '')
+      .replace(/\n+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  };
+
   const sendMessage = async () => {
     if (!input.trim()) return;
     const userMsg = input.trim();
@@ -19,7 +29,7 @@ const AIChatWidget: React.FC = () => {
     setLoading(true);
     try {
       const res = await api.post('/ai/chat', { message: userMsg });
-      setMessages(prev => [...prev, { role: 'ai', text: res.data.reply }]);
+      setMessages(prev => [...prev, { role: 'ai', text: cleanText(res.data.reply) }]);
     } catch {
       setMessages(prev => [...prev, { role: 'ai', text: 'Sorry, AI is taking a nap. Try again!' }]);
     }
@@ -28,15 +38,15 @@ const AIChatWidget: React.FC = () => {
 
   return (
     <>
-      {/* Small AI button next to Plan — same size, no overlap */}
+      {/* AI button LEFT of Plan — fixed position */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-16 right-20 z-[1000] bg-[#151A1F]/80 backdrop-blur-xl rounded-full px-4 py-2 border border-[rgba(255,255,255,0.08)] flex items-center gap-1.5 text-sm text-[#F5F5F0]"
+        className="fixed top-16 right-32 z-[1000] bg-[#151A1F]/80 backdrop-blur-xl rounded-full px-4 py-2 border border-[rgba(255,255,255,0.08)] flex items-center gap-1.5 text-sm text-[#F5F5F0]"
       >
         <MessageCircle className="w-3.5 h-3.5 text-[#FF6B4A]" /> AI
       </button>
 
-      {/* Chat panel — opens below top bar, doesn't overlap bottom nav */}
+      {/* Chat panel */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
