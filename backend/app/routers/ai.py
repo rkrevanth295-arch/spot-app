@@ -20,7 +20,10 @@ class ChatRequest(BaseModel):
 
 @router.post("/plan")
 async def plan_trip(req: TripRequest):
-    prompt = f"Plan a trip: Budget {req.budget}, Hours {req.hours}, Location {req.location}, Vibe {req.vibe}."
+    prompt = f"""You are SPOT's AI trip planner for Hyderabad.
+Plan a trip: Budget {req.budget}, Hours {req.hours}, Location {req.location}, Vibe {req.vibe}.
+IMPORTANT: Reply in plain text only. No markdown, no asterisks, no slashes, no special symbols. Max 150 words. Give 3-4 spots with brief practical notes."""
+    
     response = requests.post(
         GROQ_URL,
         headers={"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"},
@@ -32,7 +35,10 @@ async def plan_trip(req: TripRequest):
 
 @router.post("/chat")
 async def chat(req: ChatRequest):
-    prompt = f"You are SPOT's assistant. User asks: {req.message}"
+    prompt = f"""You are SPOT's friendly assistant for discovering hidden spots in Hyderabad.
+User asks: {req.message}
+IMPORTANT: Reply in plain conversational text. No markdown, no asterisks, no slashes, no bullet points, no special characters. Max 80 words. Be direct, friendly and helpful."""
+    
     response = requests.post(
         GROQ_URL,
         headers={"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"},
