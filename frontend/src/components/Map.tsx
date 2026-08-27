@@ -48,7 +48,6 @@ const categoryStyles: { [key: string]: { icon: string; bg: string } } = {
   'First Date Spots': { icon: '💕', bg: '#E91E63' },
 };
 
-// Enhanced circular photo marker with selected state + animation
 const createSpotIcon = (category: string, imageUrl: string | null, isSelected: boolean, index: number) => {
   const style = categoryStyles[category] || { icon: '📍', bg: '#FF6B4A' };
   const baseSize = isSelected ? 56 : 40;
@@ -175,8 +174,8 @@ const Map: React.FC<{
     >
       <FlyToLocation location={userLocation} />
       <TileLayer
-        attribution='&copy; CartoDB'
-        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        attribution='&copy; OpenStreetMap contributors'
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       {spots.map((spot, index) => (
         <Marker
