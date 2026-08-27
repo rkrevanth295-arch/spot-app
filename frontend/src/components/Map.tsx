@@ -148,6 +148,7 @@ const Map: React.FC<{
 }> = ({ selectedCategory = 'All', searchQuery = '', compact = false, onPinTap, userLocation }) => {
   const [spots, setSpots] = useState<Spot[]>([]);
   const [selectedSpotId, setSelectedSpotId] = useState<string | null>(null);
+  const [isDark, setIsDark] = useState(true);
 
   useEffect(() => {
     let url = '/spots/';
@@ -163,47 +164,64 @@ const Map: React.FC<{
   }, [selectedCategory, searchQuery]);
 
   return (
-    <MapContainer
-      center={hyderabadCenter}
-      zoom={14}
-      style={{ height: '100%', width: '100%', zIndex: 1 }}
-      dragging={true}
-      touchZoom={true}
-      scrollWheelZoom={true}
-      zoomControl={true}
-    >
-      <FlyToLocation location={userLocation} />
-      <TileLayer
-        attribution='&copy; OpenStreetMap contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-      {spots.map((spot, index) => (
-        <Marker
-          key={spot.id}
-          position={[spot.latitude, spot.longitude]}
-          icon={createSpotIcon(spot.category, spot.image_url, selectedSpotId === spot.id, index)}
-          eventHandlers={{
-            click: () => {
-              setSelectedSpotId(spot.id);
-              if (onPinTap) onPinTap(spot);
-            },
-          }}
-        >
-          <Popup>
-            <div style={{ fontFamily: 'Inter, sans-serif', color: '#F5F5F0', fontSize: '13px' }}>
-              <strong>{spot.name}</strong>
-              <br />
-              <span style={{ color: '#8A8F98', fontSize: '11px' }}>{spot.category}</span>
-            </div>
-          </Popup>
-        </Marker>
-      ))}
-      {userLocation && (
-        <Marker position={[userLocation.lat, userLocation.lng]} icon={createUserIcon()} zIndexOffset={1000}>
-          <Popup>You are here 📍</Popup>
-        </Marker>
-      )}
-    </MapContainer>
+    <div style={{ position: 'relative', height: '100%', width: '100%' }}>
+      <MapContainer
+        center={hyderabadCenter}
+        zoom={14}
+        style={{ height: '100%', width: '100%', zIndex: 1 }}
+        dragging={true}
+        touchZoom={true}
+        scrollWheelZoom={true}
+        zoomControl={true}
+      >
+        <FlyToLocation location={userLocation} />
+        {isDark ? (
+          <TileLayer
+            attribution='&copy; CartoDB'
+            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          />
+        ) : (
+          <TileLayer
+            attribution='&copy; OpenStreetMap contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+        )}
+        {spots.map((spot, index) => (
+          <Marker
+            key={spot.id}
+            position={[spot.latitude, spot.longitude]}
+            icon={createSpotIcon(spot.category, spot.image_url, selectedSpotId === spot.id, index)}
+            eventHandlers={{
+              click: () => {
+                setSelectedSpotId(spot.id);
+                if (onPinTap) onPinTap(spot);
+              },
+            }}
+          >
+            <Popup>
+              <div style={{ fontFamily: 'Inter, sans-serif', color: '#F5F5F0', fontSize: '13px' }}>
+                <strong>{spot.name}</strong>
+                <br />
+                <span style={{ color: '#8A8F98', fontSize: '11px' }}>{spot.category}</span>
+              </div>
+            </Popup>
+          </Marker>
+        ))}
+        {userLocation && (
+          <Marker position={[userLocation.lat, userLocation.lng]} icon={createUserIcon()} zIndexOffset={1000}>
+            <Popup>You are here 📍</Popup>
+          </Marker>
+        )}
+      </MapContainer>
+
+      {/* Dark/Light Toggle */}
+      <button
+        onClick={() => setIsDark(!isDark)}
+        className="absolute top-2 right-2 z-[500] bg-[#151A1F]/80 backdrop-blur-xl rounded-full px-3 py-1.5 border border-[rgba(255,255,255,0.08)] text-xs text-[#F5F5F0]"
+      >
+        {isDark ? '☀️ Light' : '🌙 Dark'}
+      </button>
+    </div>
   );
 };
 
