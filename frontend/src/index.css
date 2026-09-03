@@ -34,6 +34,7 @@
     @apply w-full rounded-xl border border-white/[0.08] bg-[#151A1F]/80 px-3.5 py-2.5 text-sm text-[#F5F5F0] placeholder-[#8A8F98] outline-none focus:border-[#FF6B4A]/50 transition-colors;
   }
 }
+
 /* Dark popup styling */
 .leaflet-popup-content-wrapper {
   background: #151A1F !important;
@@ -76,4 +77,9 @@
 
 .leaflet-control-attribution a {
   color: #FF6B4A !important;
+}
+
+/* Make OpenStreetMap tiles dark */
+.dark-map-tiles {
+  filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.9);
 }
