@@ -175,8 +175,10 @@ const Map: React.FC<{
       >
         <FlyToLocation location={userLocation} />
         <TileLayer
-          attribution='&copy; OpenStreetMap contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; CartoDB'
+          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          subdomains="abcd"
+          maxZoom={20}
         />
         {spots.map((spot, index) => (
           <Marker
