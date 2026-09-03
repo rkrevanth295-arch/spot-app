@@ -116,3 +116,48 @@ def unsave_spot(spot_id: str, db: Session = Depends(get_db), current_user: model
     db.delete(saved)
     db.commit()
     return {"message": "Spot removed from saved"}
+
+@router.get("/admin/pending", response_model=List[schemas.SpotResponse])
+def get_pending_spots(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    """Get all pending spots (admin only)"""
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return db.query(models.Spot).filter(models.Spot.status == "pending").all()
+
+
+@router.put("/admin/{spot_id}/approve", response_model=schemas.SpotResponse)
+def approve_spot(
+    spot_id: str,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    """Approve a pending spot (admin only)"""
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    spot = db.query(models.Spot).filter(models.Spot.id == spot_id).first()
+    if not spot:
+        raise HTTPException(status_code=404, detail="Spot not found")
+    spot.status = "approved"
+    db.commit()
+    db.refresh(spot)
+    return spot
+
+
+@router.delete("/admin/{spot_id}/reject")
+def reject_spot(
+    spot_id: str,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    """Reject a pending spot (admin only)"""
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    spot = db.query(models.Spot).filter(models.Spot.id == spot_id).first()
+    if not spot:
+        raise HTTPException(status_code=404, detail="Spot not found")
+    spot.status = "rejected"
+    db.commit()
+    return {"message": "Spot rejected"}
