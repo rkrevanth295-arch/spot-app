@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -159,8 +159,21 @@ const Map: React.FC<{
       params.push(`category=${encodeURIComponent(selectedCategory)}`);
     }
     if (params.length > 0) url += '?' + params.join('&');
-    api.get(url).then((res: any) => setSpots(res.data)).catch(() => {});
+    let mounted = true;
+    const request = window.setTimeout(() => {
+      api.get(url)
+        .then((res: any) => { if (mounted) setSpots(Array.isArray(res.data) ? res.data : []); })
+        .catch(() => { if (mounted) setSpots([]); });
+    }, searchQuery.trim() ? 250 : 0);
+    return () => { mounted = false; window.clearTimeout(request); };
   }, [selectedCategory, searchQuery]);
+
+  const validSpots = useMemo(() => spots.filter((spot) => {
+    const latitude = Number(spot.latitude);
+    const longitude = Number(spot.longitude);
+    return Number.isFinite(latitude) && Number.isFinite(longitude)
+      && Math.abs(latitude) <= 90 && Math.abs(longitude) <= 180;
+  }), [spots]);
 
   return (
     <div style={{ position: 'relative', height: '100%', width: '100%' }}>
@@ -179,7 +192,7 @@ const Map: React.FC<{
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           className="dark-map-tiles"
         />
-        {spots.map((spot, index) => (
+        {validSpots.map((spot, index) => (
           <Marker
             key={spot.id}
             position={[spot.latitude, spot.longitude]}

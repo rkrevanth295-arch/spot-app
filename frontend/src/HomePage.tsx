@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, MapPin, MapPinIcon, Zap } from 'lucide-react';
+import { Search, MapPin, MapPinIcon, Zap, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Map from './components/Map';
 import SpotDetail from './components/SpotDetail';
@@ -39,6 +39,7 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [locating, setLocating] = useState(false);
+  const [locationError, setLocationError] = useState('');
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   // Bottom sheet state
@@ -48,14 +49,15 @@ export default function HomePage() {
   const startHeightRef = useRef(60);
 
   useEffect(() => {
-    fetchSpots();
-  }, [selectedCategory]);
+    const debounce = window.setTimeout(fetchSpots, searchQuery.trim() ? 250 : 0);
+    return () => window.clearTimeout(debounce);
+  }, [selectedCategory, searchQuery]);
 
   async function fetchSpots() {
     try {
-      const url = selectedCategory === 'All'
-        ? '/spots/?limit=30'
-        : `/spots/?category=${encodeURIComponent(selectedCategory)}`;
+      const term = searchQuery.trim();
+      const url = term ? `/spots/search/?q=${encodeURIComponent(term)}` : selectedCategory === 'All'
+        ? '/spots/?limit=30' : `/spots/?category=${encodeURIComponent(selectedCategory)}`;
       const res = await api.get(url);
       setSpots(res.data);
     } catch {
@@ -65,6 +67,7 @@ export default function HomePage() {
 
   const handleLocateMe = () => {
     setLocating(true);
+    setLocationError('');
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -75,8 +78,12 @@ export default function HomePage() {
             setLocating(false);
           }, 150);
         },
-        () => setLocating(false)
+        () => { setLocating(false); setLocationError('Location access is unavailable. Check your browser permissions.'); },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
       );
+    } else {
+      setLocating(false);
+      setLocationError('Your browser does not support location services.');
     }
   };
 
@@ -133,8 +140,10 @@ export default function HomePage() {
           <input type="text" placeholder="Search spots, neighbourhoods..." value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="bg-transparent text-[#F5F5F0] placeholder-[#8A8F98] text-sm w-full outline-none" />
+          {searchQuery && <button onClick={() => setSearchQuery('')} aria-label="Clear search" className="text-[#8A8F98] hover:text-white"><X className="w-4 h-4" /></button>}
         </div>
       </div>
+      {locationError && <div role="status" className="absolute top-40 left-4 right-4 z-[1000] rounded-xl border border-[#FF6B4A]/30 bg-[#151A1F]/95 px-3 py-2 text-xs text-[#F5F5F0] shadow-lg">{locationError}</div>}
 
       {/* LOGO + ACTIONS */}
       <div className="absolute top-16 left-0 right-0 z-[1000] px-4 pointer-events-none">
