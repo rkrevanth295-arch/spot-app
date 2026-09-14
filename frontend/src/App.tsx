@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { AuthProvider } from './context/AuthContext';
 import SplashScreen from './components/SplashScreen';
 import HomePage from './HomePage';
@@ -14,14 +15,20 @@ import Signup from './pages/Signup';
 import AITripPlanner from './pages/AITripPlanner';
 import AdminPage from './pages/AdminPage';
 
-function App() {
-  const [showSplash, setShowSplash] = useState(true);
-
+function AnimatedRoutes() {
+  const location = useLocation();
+  const reduceMotion = useReducedMotion();
   return (
-    <AuthProvider>
-      <SplashScreen show={showSplash} onDone={() => { sessionStorage.setItem('spot_splash_seen', '1'); setShowSplash(false); }} />
-      <Router>
-        <Routes>
+    <AnimatePresence mode="wait">
+      <motion.main
+        key={location.pathname}
+        initial={reduceMotion ? false : { opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -6 }}
+        transition={{ duration: reduceMotion ? 0.12 : 0.22, ease: 'easeOut' }}
+        className="min-h-screen"
+      >
+        <Routes location={location}>
           <Route path='/' element={<HomePage />} />
           <Route path='/search' element={<SearchPage />} />
           <Route path='/spaces' element={<SpacesPage />} />
@@ -35,6 +42,19 @@ function App() {
           <Route path='/admin' element={<AdminPage />} />
           <Route path='*' element={<Navigate to='/' replace />} />
         </Routes>
+      </motion.main>
+    </AnimatePresence>
+  );
+}
+
+function App() {
+  const [showSplash, setShowSplash] = useState(true);
+
+  return (
+    <AuthProvider>
+      <SplashScreen show={showSplash} onDone={() => { sessionStorage.setItem('spot_splash_seen', '1'); setShowSplash(false); }} />
+      <Router>
+        <AnimatedRoutes />
       </Router>
     </AuthProvider>
   );

@@ -48,7 +48,7 @@ const categoryStyles: { [key: string]: { icon: string; bg: string } } = {
   'First Date Spots': { icon: '💕', bg: '#E91E63' },
 };
 
-const createSpotIcon = (category: string, imageUrl: string | null, isSelected: boolean, index: number) => {
+const createSpotIcon = (category: string, imageUrl: string | null, isSelected: boolean, index: number, isDimmed: boolean, isMatch: boolean) => {
   const style = categoryStyles[category] || { icon: '📍', bg: '#FF6B4A' };
   const baseSize = isSelected ? 56 : 40;
   const ringSize = isSelected ? 3 : 2;
@@ -67,15 +67,15 @@ const createSpotIcon = (category: string, imageUrl: string | null, isSelected: b
         height: ${baseSize}px;
         border-radius: 50%;
         border: ${ringSize}px solid ${style.bg};
+        color: ${style.bg};
         box-shadow: 0 0 ${glowSize}px ${style.bg}80, 0 0 4px rgba(0,0,0,0.4);
         ${backgroundStyle}
         overflow: visible;
         display: flex;
         align-items: center;
         justify-content: center;
-        animation: markerDrop 0.5s ease-out ${index * 40}ms both;
-        transition: all 0.3s ease;
-      ">
+        --marker-delay: ${Math.min(index * 28, 420)}ms;
+      " class="spot-marker ${isDimmed ? 'spot-marker--dimmed' : ''} ${isMatch ? 'spot-marker--match' : ''}">
         ${!imageUrl ? `<span style="font-size: ${isSelected ? '24px' : '18px'}; line-height: 1;">${style.icon}</span>` : ''}
         <div style="
           position: absolute;
@@ -96,13 +96,6 @@ const createSpotIcon = (category: string, imageUrl: string | null, isSelected: b
           ${style.icon}
         </div>
       </div>
-      <style>
-        @keyframes markerDrop {
-          0% { transform: translateY(-30px) scale(0.5); opacity: 0; }
-          70% { transform: translateY(5px) scale(1.05); opacity: 1; }
-          100% { transform: translateY(0) scale(1); opacity: 1; }
-        }
-      </style>
     `,
     className: 'spot-photo-marker',
     iconSize: [baseSize + ringSize * 2, baseSize + ringSize * 2],
@@ -139,6 +132,35 @@ function FlyToLocation({ location }: { location?: { lat: number; lng: number } |
   return null;
 }
 
+function FocusOnCategory({ spot }: { spot?: Spot }) {
+  const map = useMap();
+  useEffect(() => {
+    if (spot) map.flyTo([spot.latitude, spot.longitude], Math.max(map.getZoom(), 14), { duration: 0.35 });
+  }, [map, spot]);
+  return null;
+}
+
+function MapResetControl() {
+  const map = useMap();
+  return (
+    <button
+      type="button"
+      aria-label="Reset map to Hyderabad"
+      className="map-reset-control"
+      onClick={() => map.flyTo(hyderabadCenter, 14, { duration: 0.35 })}
+    >
+      ↺
+    </button>
+  );
+}
+
+const loadingPinIcon = L.divIcon({
+  html: '<span class="map-loading-pin"></span>',
+  className: 'map-loading-pin-wrapper',
+  iconSize: [18, 18],
+  iconAnchor: [9, 9],
+});
+
 const Map: React.FC<{
   selectedCategory?: string;
   searchQuery?: string;
@@ -148,6 +170,7 @@ const Map: React.FC<{
 }> = ({ selectedCategory = 'All', searchQuery = '', compact = false, onPinTap, userLocation }) => {
   const [spots, setSpots] = useState<Spot[]>([]);
   const [selectedSpotId, setSelectedSpotId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let url = '/spots/';
@@ -155,15 +178,17 @@ const Map: React.FC<{
     if (searchQuery.trim()) {
       url = '/spots/search/';
       params.push(`q=${encodeURIComponent(searchQuery.trim())}`);
-    } else if (selectedCategory !== 'All') {
-      params.push(`category=${encodeURIComponent(selectedCategory)}`);
+    } else {
+      params.push('limit=200');
     }
     if (params.length > 0) url += '?' + params.join('&');
     let mounted = true;
     const request = window.setTimeout(() => {
+      if (mounted) setLoading(true);
       api.get(url)
         .then((res: any) => { if (mounted) setSpots(Array.isArray(res.data) ? res.data : []); })
-        .catch(() => { if (mounted) setSpots([]); });
+        .catch(() => { if (mounted) setSpots([]); })
+        .finally(() => { if (mounted) setLoading(false); });
     }, searchQuery.trim() ? 250 : 0);
     return () => { mounted = false; window.clearTimeout(request); };
   }, [selectedCategory, searchQuery]);
@@ -174,6 +199,10 @@ const Map: React.FC<{
     return Number.isFinite(latitude) && Number.isFinite(longitude)
       && Math.abs(latitude) <= 90 && Math.abs(longitude) <= 180;
   }), [spots]);
+
+  const matchingSpots = useMemo(() => selectedCategory === 'All' || searchQuery.trim()
+    ? validSpots
+    : validSpots.filter((spot) => spot.category === selectedCategory), [validSpots, selectedCategory, searchQuery]);
 
   return (
     <div style={{ position: 'relative', height: '100%', width: '100%' }}>
@@ -187,16 +216,23 @@ const Map: React.FC<{
         zoomControl={true}
       >
         <FlyToLocation location={userLocation} />
+        {selectedCategory !== 'All' && !searchQuery.trim() && <FocusOnCategory spot={matchingSpots[0]} />}
+        <MapResetControl />
         <TileLayer
           attribution='&copy; OpenStreetMap contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           className="dark-map-tiles"
         />
-        {validSpots.map((spot, index) => (
+        {loading && [0, 1, 2, 3].map((index) => (
+          <Marker key={`loading-${index}`} position={[17.36 + index * 0.015, 78.46 + index * 0.018]} icon={loadingPinIcon} interactive={false} />
+        ))}
+        {validSpots.map((spot, index) => {
+          const isMatch = selectedCategory === 'All' || Boolean(searchQuery.trim()) || spot.category === selectedCategory;
+          return (
           <Marker
             key={spot.id}
             position={[spot.latitude, spot.longitude]}
-            icon={createSpotIcon(spot.category, spot.image_url, selectedSpotId === spot.id, index)}
+            icon={createSpotIcon(spot.category, spot.image_url, selectedSpotId === spot.id, index, !isMatch, isMatch && selectedCategory !== 'All')}
             eventHandlers={{
               click: () => {
                 setSelectedSpotId(spot.id);
@@ -212,7 +248,8 @@ const Map: React.FC<{
               </div>
             </Popup>
           </Marker>
-        ))}
+          );
+        })}
         {userLocation && (
           <Marker position={[userLocation.lat, userLocation.lng]} icon={createUserIcon()} zIndexOffset={1000}>
             <Popup>You are here 📍</Popup>

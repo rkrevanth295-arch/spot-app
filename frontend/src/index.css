@@ -83,3 +83,67 @@
 .dark-map-tiles {
   filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.9);
 }
+
+@keyframes marker-drop {
+  0% { transform: translate3d(0, -28px, 0) scale(0.58); opacity: 0; }
+  72% { transform: translate3d(0, 3px, 0) scale(1.06); opacity: 1; }
+  100% { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
+}
+
+@keyframes marker-match {
+  0%, 100% { box-shadow: 0 0 12px currentColor; }
+  50% { box-shadow: 0 0 26px currentColor; }
+}
+
+@keyframes marker-ripple {
+  from { transform: scale(.5); opacity: .8; }
+  to { transform: scale(1.35); opacity: 0; }
+}
+
+@keyframes handle-pulse {
+  0%, 100% { opacity: .35; transform: scaleX(1); }
+  50% { opacity: .8; transform: scaleX(1.12); }
+}
+
+@keyframes skeleton-shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(180%); }
+}
+
+@keyframes loading-pin-pulse {
+  0%, 100% { transform: scale(.72); opacity: .45; }
+  50% { transform: scale(1); opacity: .9; }
+}
+
+@keyframes typing-dot {
+  0%, 60%, 100% { transform: translateY(0); opacity: .35; }
+  30% { transform: translateY(-3px); opacity: 1; }
+}
+
+.spot-photo-marker { background: transparent !important; border: 0 !important; }
+.spot-marker {
+  animation: marker-drop 360ms cubic-bezier(.22, .9, .32, 1.18) var(--marker-delay, 0ms) both;
+  will-change: transform, opacity;
+  cursor: pointer;
+}
+.spot-marker:hover { transform: scale(1.15); filter: brightness(1.08); }
+.spot-marker::after {
+  content: ''; position: absolute; inset: -8px; border-radius: inherit;
+  border: 2px solid currentColor; opacity: 0; pointer-events: none;
+}
+.spot-marker:active::after { animation: marker-ripple 360ms ease-out; }
+.spot-marker--dimmed { opacity: .2 !important; filter: grayscale(.65); }
+.spot-marker--match { animation-name: marker-drop, marker-match; animation-duration: 360ms, 380ms; animation-delay: var(--marker-delay, 0ms), 360ms; }
+.drag-handle-pulse { animation: handle-pulse 1.8s ease-in-out infinite; }
+.skeleton-shimmer { position: relative; background: #151A1F; }
+.skeleton-shimmer::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,.08), transparent); animation: skeleton-shimmer 1.2s ease-in-out infinite; }
+.map-loading-pin-wrapper { background: transparent !important; border: 0 !important; }
+.map-loading-pin { display: block; width: 18px; height: 18px; border-radius: 50%; background: #8A8F98; animation: loading-pin-pulse 1s ease-in-out infinite; }
+.map-reset-control { position: absolute; top: 82px; right: 10px; z-index: 1000; width: 34px; height: 34px; border-radius: 10px; border: 1px solid rgba(255,255,255,.08); background: #151A1F; color: #F5F5F0; box-shadow: 0 4px 14px rgba(0,0,0,.35); font-size: 20px; line-height: 1; }
+.map-reset-control:active { transform: scale(.97); }
+.typing-dot { display: inline-block; width: 5px; height: 5px; margin: 0 2px; border-radius: 50%; background: #8A8F98; animation: typing-dot .9s ease-in-out infinite; }
+.typing-dot:nth-child(2) { animation-delay: .12s; }.typing-dot:nth-child(3) { animation-delay: .24s; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
+}

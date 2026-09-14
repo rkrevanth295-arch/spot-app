@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { Bookmark, Share2, Navigation, MapPin, X, CheckCircle, Loader2 } from 'lucide-react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -22,7 +22,9 @@ const categoryIcons: { [key: string]: string } = {
 export default function SpotDetail({ spot, onClose }: { spot: Spot; onClose: () => void }) {
   const [isSaved, setIsSaved] = useState(false);
   const [checkingIn, setCheckingIn] = useState(false);
+  const [scrollOffset, setScrollOffset] = useState(0);
   const { user } = useAuth();
+  const reduceMotion = useReducedMotion();
   const icon = categoryIcons[spot.category] || '📍';
 
   useEffect(() => {
@@ -82,12 +84,13 @@ export default function SpotDetail({ spot, onClose }: { spot: Spot; onClose: () 
   return (
     <motion.div
       initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
-      transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+      transition={reduceMotion ? { duration: 0.2 } : { type: 'spring', damping: 24, stiffness: 340, bounce: 0.15 }}
       className="fixed inset-0 z-[10000] bg-[#0B0E11] overflow-y-auto"
+      onScroll={(event) => setScrollOffset(event.currentTarget.scrollTop)}
     >
       <div className="relative">
         {spot.image_url ? (
-          <img src={spot.image_url} alt={spot.name} className="w-full h-72 object-cover" />
+          <motion.img animate={{ y: Math.min(scrollOffset * 0.16, 34) }} transition={{ duration: 0.1 }} src={spot.image_url} alt={spot.name} className="w-full h-72 object-cover" />
         ) : (
           <div className="w-full h-72 bg-[#151A1F] flex items-center justify-center text-6xl">{icon}</div>
         )}
@@ -107,24 +110,24 @@ export default function SpotDetail({ spot, onClose }: { spot: Spot; onClose: () 
         <p className="text-[#8A8F98] flex items-center gap-1.5 mt-2"><MapPin className="w-4 h-4" /> Hyderabad</p>
         {spot.description && <p className="text-sm text-[#8A8F98] mt-4 leading-relaxed">{spot.description}</p>}
 
-        <div className="flex gap-3 mt-6">
-          <button onClick={handleSave}
+        <motion.div initial="hidden" animate="visible" variants={{ hidden: {}, visible: { transition: { staggerChildren: reduceMotion ? 0 : 0.06 } } }} className="flex gap-3 mt-6">
+          <motion.button variants={{ hidden: { opacity: 0, y: 8 }, visible: { opacity: 1, y: 0 } }} whileTap={reduceMotion ? undefined : { scale: 0.97 }} onClick={handleSave}
             className={`flex-1 h-12 rounded-xl font-medium text-sm flex items-center justify-center gap-2 ${isSaved ? 'bg-[#FF6B4A] text-white' : 'bg-[#151A1F] text-[#F5F5F0] border border-[rgba(255,255,255,0.1)]'}`}>
-            <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-white' : ''}`} /> {isSaved ? 'Saved' : 'Save'}
-          </button>
-          <button onClick={handleShare} className="flex-1 h-12 rounded-xl font-medium text-sm bg-[#151A1F] text-[#F5F5F0] border border-[rgba(255,255,255,0.1)] flex items-center justify-center gap-2">
+            <motion.span animate={isSaved && !reduceMotion ? { scale: [1, 1.32, 1] } : { scale: 1 }} transition={{ duration: 0.28 }}><Bookmark className={`w-4 h-4 ${isSaved ? 'fill-white' : ''}`} /></motion.span> {isSaved ? 'Saved' : 'Save'}
+          </motion.button>
+          <motion.button variants={{ hidden: { opacity: 0, y: 8 }, visible: { opacity: 1, y: 0 } }} whileTap={reduceMotion ? undefined : { scale: 0.97 }} onClick={handleShare} className="flex-1 h-12 rounded-xl font-medium text-sm bg-[#151A1F] text-[#F5F5F0] border border-[rgba(255,255,255,0.1)] flex items-center justify-center gap-2">
             <Share2 className="w-4 h-4" /> Share
-          </button>
-          <button onClick={handleDirections} className="flex-1 h-12 rounded-xl font-medium text-sm bg-[#151A1F] text-[#F5F5F0] border border-[rgba(255,255,255,0.1)] flex items-center justify-center gap-2">
+          </motion.button>
+          <motion.button variants={{ hidden: { opacity: 0, y: 8 }, visible: { opacity: 1, y: 0 } }} whileTap={reduceMotion ? undefined : { scale: 0.97 }} onClick={handleDirections} className="flex-1 h-12 rounded-xl font-medium text-sm bg-[#151A1F] text-[#F5F5F0] border border-[rgba(255,255,255,0.1)] flex items-center justify-center gap-2">
             <Navigation className="w-4 h-4" /> Go
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
 
-        <button onClick={handleCheckIn} disabled={checkingIn}
+        <motion.button whileTap={reduceMotion ? undefined : { scale: 0.97 }} onClick={handleCheckIn} disabled={checkingIn}
           className="w-full mt-3 h-12 rounded-xl bg-gradient-to-r from-[#FF6B4A] to-[#F5A623] text-white font-semibold flex items-center justify-center gap-2">
           {checkingIn ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
           {checkingIn ? 'Verifying...' : 'Check In (+30 pts)'}
-        </button>
+        </motion.button>
       </div>
     </motion.div>
   );

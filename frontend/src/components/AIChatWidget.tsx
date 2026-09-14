@@ -1,7 +1,29 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useEffect, useState } from 'react';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { MessageCircle, Send, X } from 'lucide-react';
 import api from '../services/api';
+
+function TypewriterText({ text }: { text: string }) {
+  const reduceMotion = useReducedMotion();
+  const [visible, setVisible] = useState(reduceMotion ? text.length : 0);
+
+  useEffect(() => {
+    setVisible(reduceMotion ? text.length : 0);
+    if (reduceMotion) return;
+    const timer = window.setInterval(() => {
+      setVisible((current) => {
+        if (current >= text.length) {
+          window.clearInterval(timer);
+          return current;
+        }
+        return current + 2;
+      });
+    }, 16);
+    return () => window.clearInterval(timer);
+  }, [text, reduceMotion]);
+
+  return <>{text.slice(0, visible)}</>;
+}
 
 const AIChatWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -10,6 +32,7 @@ const AIChatWidget: React.FC = () => {
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const reduceMotion = useReducedMotion();
 
   const cleanText = (text: string) => {
     return text
@@ -39,20 +62,22 @@ const AIChatWidget: React.FC = () => {
   return (
     <>
       {/* AI button — perfectly aligned with Plan button */}
-      <button
+      <motion.button
         onClick={() => setIsOpen(!isOpen)}
+        whileTap={reduceMotion ? undefined : { scale: 0.97 }}
         className="fixed top-[68px] right-36 z-[1000] bg-[#151A1F]/80 backdrop-blur-xl rounded-full px-4 py-2 border border-[rgba(255,255,255,0.08)] flex items-center gap-1.5 text-sm text-[#F5F5F0]"
       >
         <MessageCircle className="w-3.5 h-3.5 text-[#FF6B4A]" /> AI
-      </button>
+      </motion.button>
 
       {/* Chat panel */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 24, scale: 0.98 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
+            exit={{ opacity: 0, y: 16, scale: 0.98 }}
+            transition={reduceMotion ? { duration: 0.18 } : { type: 'spring', stiffness: 360, damping: 25, bounce: 0.14 }}
             className="fixed top-28 right-4 z-[2000] w-[calc(100%-2rem)] max-w-sm bg-[#151A1F] rounded-2xl border border-[rgba(255,255,255,0.08)] shadow-2xl overflow-hidden"
           >
             <div className="bg-[#0B0E11] px-4 py-3 flex items-center justify-between">
@@ -66,20 +91,20 @@ const AIChatWidget: React.FC = () => {
             </div>
             <div className="h-72 overflow-y-auto p-4 space-y-3">
               {messages.map((msg, i) => (
-                <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <motion.div key={`${msg.role}-${i}-${msg.text}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: reduceMotion ? 0 : 0.18 }} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   <div className={`max-w-[80%] px-3 py-2 rounded-2xl text-sm ${
                     msg.role === 'user'
                       ? 'bg-[#FF6B4A] text-white rounded-br-md'
                       : 'bg-[#0B0E11] text-[#F5F5F0] rounded-bl-md'
                   }`}>
-                    {msg.text}
+                    {msg.role === 'ai' ? <TypewriterText text={msg.text} /> : msg.text}
                   </div>
-                </div>
+                </motion.div>
               ))}
               {loading && (
                 <div className="flex justify-start">
                   <div className="bg-[#0B0E11] px-3 py-2 rounded-2xl text-sm text-[#8A8F98]">
-                    Thinking...
+                    <span className="typing-dot" /><span className="typing-dot" /><span className="typing-dot" />
                   </div>
                 </div>
               )}
@@ -92,9 +117,9 @@ const AIChatWidget: React.FC = () => {
                 placeholder="Ask about spots..."
                 className="flex-1 bg-[#0B0E11] px-3 py-2 rounded-xl text-sm text-[#F5F5F0] outline-none"
               />
-              <button onClick={sendMessage} className="w-10 h-10 rounded-xl bg-[#FF6B4A] flex items-center justify-center">
+              <motion.button whileTap={reduceMotion ? undefined : { scale: 0.97 }} onClick={sendMessage} className="w-10 h-10 rounded-xl bg-[#FF6B4A] flex items-center justify-center">
                 <Send className="w-4 h-4 text-white" />
-              </button>
+              </motion.button>
             </div>
           </motion.div>
         )}

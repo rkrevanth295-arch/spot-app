@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { Search, MapPin, MapPinIcon, Zap, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Map from './components/Map';
@@ -40,6 +40,7 @@ export default function HomePage() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState('');
+  const [loading, setLoading] = useState(true);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   // Bottom sheet state
@@ -47,6 +48,7 @@ export default function HomePage() {
   const [isDragging, setIsDragging] = useState(false);
   const startYRef = useRef(0);
   const startHeightRef = useRef(60);
+  const reduceMotion = useReducedMotion();
 
   useEffect(() => {
     const debounce = window.setTimeout(fetchSpots, searchQuery.trim() ? 250 : 0);
@@ -54,14 +56,17 @@ export default function HomePage() {
   }, [selectedCategory, searchQuery]);
 
   async function fetchSpots() {
+    setLoading(true);
     try {
       const term = searchQuery.trim();
       const url = term ? `/spots/search/?q=${encodeURIComponent(term)}` : selectedCategory === 'All'
         ? '/spots/?limit=30' : `/spots/?category=${encodeURIComponent(selectedCategory)}`;
       const res = await api.get(url);
-      setSpots(res.data);
+      setSpots(Array.isArray(res.data) ? res.data : []);
     } catch {
       setSpots([]);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -172,22 +177,25 @@ export default function HomePage() {
       <div className="absolute top-28 left-0 right-0 z-[1000] px-4 pointer-events-none">
         <div className="overflow-x-auto whitespace-nowrap flex gap-2 pb-1 pointer-events-auto">
           {vibeChips.map(chip => (
-            <button key={chip} onClick={() => { setSelectedCategory(chip); setSearchQuery(''); }}
+            <motion.button key={chip} onClick={() => { setSelectedCategory(chip); setSearchQuery(''); }}
+              whileTap={reduceMotion ? undefined : { scale: 0.95 }}
+              animate={{ scale: selectedCategory === chip ? 1.03 : 1 }}
+              transition={{ type: 'spring', stiffness: 420, damping: 22 }}
               className={`px-3.5 py-1.5 rounded-full text-xs whitespace-nowrap transition-all ${
-                selectedCategory === chip ? 'bg-[#FF6B4A] text-white' : 'bg-[#151A1F]/80 border border-[rgba(255,255,255,0.08)] text-[#F5F5F0]'
+                selectedCategory === chip ? 'bg-[#FF6B4A] text-white shadow-[0_0_18px_rgba(255,107,74,0.42)]' : 'bg-[#151A1F]/80 border border-[rgba(255,255,255,0.08)] text-[#F5F5F0]'
               }`}>
               {categoryEmojis[chip] || '📍'} {chip}
-            </button>
+            </motion.button>
           ))}
         </div>
       </div>
 
       {/* BOTTOM SHEET — anchored at bottom, only top moves */}
-      <div className="absolute bottom-20 left-0 right-0 z-[500] pointer-events-none" style={{ height: '70vh' }}>
+      <div className="absolute bottom-[calc(3.5rem+env(safe-area-inset-bottom))] left-0 right-0 z-[500] pointer-events-none" style={{ height: '70vh' }}>
         <motion.div
-          animate={{ height: sheetHeight }}
-          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          className="absolute bottom-0 left-0 right-0 bg-[#151A1F]/95 backdrop-blur-xl rounded-t-3xl border-t border-[rgba(255,255,255,0.08)] shadow-[0_-10px_40px_rgba(0,0,0,0.5)] overflow-hidden pointer-events-auto"
+          animate={{ height: sheetHeight, backdropFilter: isExpanded ? 'blur(24px)' : 'blur(12px)' }}
+          transition={reduceMotion ? { duration: 0.2 } : { type: 'spring', stiffness: 340, damping: 24, bounce: 0.18 }}
+          className="absolute bottom-0 left-0 right-0 bg-[#151A1F]/95 rounded-t-3xl border-t border-[rgba(255,255,255,0.08)] shadow-[0_-10px_40px_rgba(0,0,0,0.5)] overflow-hidden pointer-events-auto"
         >
           {/* Drag handle area — attaches custom drag handlers */}
           <div
@@ -200,7 +208,7 @@ export default function HomePage() {
             onTouchMove={handleDragMove}
             onTouchEnd={handleDragEnd}
           >
-            <div className="w-10 h-1 bg-[#8A8F98]/40 rounded-full" />
+            <div className={`w-10 h-1 bg-[#8A8F98]/40 rounded-full ${!isExpanded ? 'drag-handle-pulse' : ''}`} />
           </div>
 
           {/* Header */}
@@ -223,7 +231,11 @@ export default function HomePage() {
               </button>
             </div>
 
-            {spots.length === 0 ? (
+            {loading ? (
+              <div className="space-y-2.5" aria-label="Loading spots">
+                {[0, 1, 2].map((index) => <div key={index} className="h-20 rounded-2xl border border-white/[0.05] bg-[#0B0E11] overflow-hidden"><div className="h-full w-2/3 skeleton-shimmer" /></div>)}
+              </div>
+            ) : spots.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-[#8A8F98] text-sm">Nothing here yet — be the first to drop a pin 📍</p>
               </div>
