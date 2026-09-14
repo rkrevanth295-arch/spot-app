@@ -4,3 +4,5 @@ venv/
 node_modules/
 .env
 .DS_Store
+render_dump.sql
+*.sql
