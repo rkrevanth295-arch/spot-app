@@ -34,7 +34,7 @@ def create_spot(
 @router.get("/", response_model=List[schemas.SpotResponse])
 def get_spots(
     category: Optional[str] = Query(None),
-    limit: int = Query(50, le=100),
+    limit: int = Query(50, le=200),
     db: Session = Depends(get_db)
 ):
     query = db.query(models.Spot).filter(models.Spot.status == "approved")
