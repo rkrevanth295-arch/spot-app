@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, MapPin, Clock, Lightbulb } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
-import api from './services/api';
+import api from '../services/api';
 
 const budgetOptions = [
   { value: 200, label: 'Broke student mode', icon: '🎓' },
@@ -26,9 +26,7 @@ const vibes = [
 ];
 
 interface PlanResult {
-  spots: any[];
-  itinerary: string;
-  estimatedBudget: number;
+  plan: string;
 }
 
 export default function AITripPlanner() {
@@ -48,15 +46,14 @@ export default function AITripPlanner() {
 
     setLoading(true);
     try {
-      const response = await api.post('/ai/trip-plan', {
-        budget,
-        time,
-        location,
-        vibes: selectedVibes.length > 0 ? selectedVibes : undefined,
+      const response = await api.post('/ai/plan', {
+        budget: String(budget),
+        hours: String(time),
+        location: location.slice(0, 120),
+        vibe: selectedVibes.join(', ').slice(0, 120),
       });
       setPlan(response.data);
-    } catch (error) {
-      console.error('Error generating plan:', error);
+    } catch {
       alert('Failed to generate plan. Please try again.');
     } finally {
       setLoading(false);
@@ -185,28 +182,8 @@ export default function AITripPlanner() {
             {/* PLAN RESULTS */}
             <div className="space-y-4">
               <div className="bg-gradient-to-r from-[#FF6B4A]/20 to-[#F5A623]/20 border border-[#FF6B4A]/50 rounded-2xl p-4">
-                <h3 className="font-semibold mb-2">Your AI-Generated Plan</h3>
-                <p className="text-sm text-[#8A8F98] mb-3">{plan.itinerary}</p>
-                <div className="text-xs text-[#FF6B4A] font-medium">
-                  Estimated Budget: ₹{plan.estimatedBudget}
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-sm font-semibold text-[#8A8F98] mb-3">Recommended Spots</h3>
-                <div className="space-y-2">
-                  {plan.spots.map((spot, idx) => (
-                    <div
-                      key={idx}
-                      className="bg-[#151A1F] border border-[rgba(255,255,255,0.08)] rounded-xl p-3 cursor-pointer hover:border-[#FF6B4A]/50 transition-all"
-                      onClick={() => navigate(`/spot/${spot.id}`)}
-                    >
-                      <h4 className="font-medium text-sm">{spot.name}</h4>
-                      <p className="text-xs text-[#8A8F98] mt-1">{spot.category}</p>
-                      <p className="text-xs text-[#8A8F98] mt-1">{spot.description}</p>
-                    </div>
-                  ))}
-                </div>
+                <h3 className="font-semibold mb-2">Your plan</h3>
+                <p className="text-sm text-[#C8CDD4] leading-relaxed whitespace-pre-wrap">{plan.plan}</p>
               </div>
 
               <motion.button

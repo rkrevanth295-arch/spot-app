@@ -1,26 +1,21 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
 from uuid import UUID
 from datetime import datetime
 
 
-# ---------- USER SCHEMAS ----------
-
 class UserCreate(BaseModel):
-    """Data needed to create a new user (signup form)"""
-    username: str
+    username: str = Field(min_length=3, max_length=50)
     email: EmailStr
-    password: str
+    password: str = Field(min_length=8, max_length=128)
 
 
 class UserLogin(BaseModel):
-    """Data needed to log in"""
     username: str
     password: str
 
 
 class UserResponse(BaseModel):
-    """Data returned when asking about a user (no password!)"""
     id: UUID
     username: str
     email: str
@@ -32,24 +27,19 @@ class UserResponse(BaseModel):
         from_attributes = True
 
 
-# ---------- TOKEN SCHEMA ----------
-
 class Token(BaseModel):
-    """The JWT token returned after login"""
     access_token: str
     token_type: str = "bearer"
 
 
-# ---------- SPOT SCHEMAS ----------
-
 class SpotCreate(BaseModel):
-    name: str
-    place: Optional[str] = None
-    category: str
-    description: Optional[str] = None
-    latitude: float
-    longitude: float
-    image_url: Optional[str] = None
+    name: str = Field(min_length=2, max_length=100)
+    place: Optional[str] = Field(default=None, max_length=100)
+    category: str = Field(min_length=2, max_length=30)
+    description: Optional[str] = Field(default=None, max_length=1000)
+    latitude: float = Field(ge=-90, le=90)
+    longitude: float = Field(ge=-180, le=180)
+    image_url: Optional[str] = Field(default=None, max_length=500)
     verification_status: Optional[str] = "verified"
 
 
@@ -64,7 +54,6 @@ class SpotResponse(BaseModel):
     longitude: float
     image_url: Optional[str]
     status: str
-    verification_status: Optional[str] = None
     verification_status: Optional[str] = None
     created_at: datetime
 

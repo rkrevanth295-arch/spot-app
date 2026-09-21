@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { LogOut, MapPin, Star, Trophy } from 'lucide-react';
+import { LogOut, MapPin, Star, Trophy, Shield } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getLevel, getLevelProgress, BADGES } from '../lib/constants';
 import BottomNav from '../components/BottomNav';
@@ -87,10 +88,21 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <div className="px-4 mt-6">
-        <button onClick={logout} className="w-full h-12 rounded-xl bg-[#151A1F] text-[#FF6B4A] border border-[rgba(255,255,255,0.08)] flex items-center justify-center gap-2">
-          <LogOut className="w-4 h-4" /> Log Out
-        </button>
+      <div className="px-4 mt-6 space-y-3">
+        {user?.role === 'admin' && (
+          <Link to="/admin" className="w-full h-11 rounded-xl bg-[#151A1F] text-[#F5F5F0] border border-[rgba(255,255,255,0.08)] flex items-center justify-center gap-2 text-sm">
+            <Shield className="w-4 h-4 text-[#FF6B4A]" /> Admin review
+          </Link>
+        )}
+        {user ? (
+          <button onClick={logout} className="w-full h-11 rounded-xl bg-[#151A1F] text-[#FF6B4A] border border-[rgba(255,255,255,0.08)] flex items-center justify-center gap-2 text-sm">
+            <LogOut className="w-4 h-4" /> Log Out
+          </button>
+        ) : (
+          <Link to="/login" className="w-full h-11 rounded-xl btn-primary flex items-center justify-center text-sm">
+            Log in
+          </Link>
+        )}
       </div>
 
       <BottomNav />

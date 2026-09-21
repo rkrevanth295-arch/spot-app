@@ -1,9 +1,23 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from typing import Optional, List
+from urllib.parse import urlparse
 
 from .. import models, schemas, auth
 from ..database import get_db
+
+
+def escape_like(term: str) -> str:
+    return term.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+
+def assert_safe_image_url(url: Optional[str]) -> Optional[str]:
+    if not url:
+        return url
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https") or not parsed.netloc:
+        raise HTTPException(status_code=400, detail="Invalid image URL")
+    return url
 
 router = APIRouter(prefix="/spots", tags=["Spots"])
 
@@ -22,7 +36,7 @@ def create_spot(
         description=spot_data.description,
         latitude=spot_data.latitude,
         longitude=spot_data.longitude,
-        image_url=spot_data.image_url,
+        image_url=assert_safe_image_url(spot_data.image_url),
         status="approved"
     )
     db.add(new_spot)
@@ -44,10 +58,11 @@ def get_spots(
 
 
 @router.get("/search/", response_model=List[schemas.SpotResponse])
-def search_spots(q: str = Query(..., min_length=2), db: Session = Depends(get_db)):
+def search_spots(q: str = Query(..., min_length=2, max_length=80), db: Session = Depends(get_db)):
+    term = f"%{escape_like(q.strip())}%"
     return db.query(models.Spot).filter(
         models.Spot.status == "approved",
-        (models.Spot.name.ilike(f"%{q}%") | models.Spot.description.ilike(f"%{q}%") | models.Spot.category.ilike(f"%{q}%"))
+        (models.Spot.name.ilike(term, escape="\\") | models.Spot.description.ilike(term, escape="\\") | models.Spot.category.ilike(term, escape="\\"))
     ).limit(20).all()
 
 
@@ -58,7 +73,7 @@ def get_saved_spots(db: Session = Depends(get_db), current_user: models.User = D
 
 @router.get("/{spot_id}", response_model=schemas.SpotResponse)
 def get_spot(spot_id: str, db: Session = Depends(get_db)):
-    spot = db.query(models.Spot).filter(models.Spot.id == spot_id).first()
+    spot = db.query(models.Spot).filter(models.Spot.id == spot_id, models.Spot.status == "approved").first()
     if not spot:
         raise HTTPException(status_code=404, detail="Spot not found")
     return spot
@@ -77,7 +92,7 @@ def update_spot(spot_id: str, spot_data: schemas.SpotCreate, db: Session = Depen
     spot.description = spot_data.description
     spot.latitude = spot_data.latitude
     spot.longitude = spot_data.longitude
-    spot.image_url = spot_data.image_url
+    spot.image_url = assert_safe_image_url(spot_data.image_url)
     db.commit()
     db.refresh(spot)
     return spot
@@ -120,11 +135,8 @@ def unsave_spot(spot_id: str, db: Session = Depends(get_db), current_user: model
 @router.get("/admin/pending", response_model=List[schemas.SpotResponse])
 def get_pending_spots(
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(auth.get_current_user)
+    current_user: models.User = Depends(auth.require_admin)
 ):
-    """Get all pending spots (admin only)"""
-    if current_user.role != "admin":
-        raise HTTPException(status_code=403, detail="Admin access required")
     return db.query(models.Spot).filter(models.Spot.status == "pending").all()
 
 
@@ -132,11 +144,8 @@ def get_pending_spots(
 def approve_spot(
     spot_id: str,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(auth.get_current_user)
+    current_user: models.User = Depends(auth.require_admin)
 ):
-    """Approve a pending spot (admin only)"""
-    if current_user.role != "admin":
-        raise HTTPException(status_code=403, detail="Admin access required")
     spot = db.query(models.Spot).filter(models.Spot.id == spot_id).first()
     if not spot:
         raise HTTPException(status_code=404, detail="Spot not found")
@@ -150,11 +159,8 @@ def approve_spot(
 def reject_spot(
     spot_id: str,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(auth.get_current_user)
+    current_user: models.User = Depends(auth.require_admin)
 ):
-    """Reject a pending spot (admin only)"""
-    if current_user.role != "admin":
-        raise HTTPException(status_code=403, detail="Admin access required")
     spot = db.query(models.Spot).filter(models.Spot.id == spot_id).first()
     if not spot:
         raise HTTPException(status_code=404, detail="Spot not found")

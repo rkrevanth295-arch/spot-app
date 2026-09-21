@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, MapPin } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
 import api from '../services/api';
 
@@ -33,6 +34,7 @@ const categoryEmojis: { [key: string]: string } = {
 };
 
 export default function SearchPage() {
+  const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [spots, setSpots] = useState<Spot[]>([]);
@@ -93,7 +95,7 @@ export default function SearchPage() {
         <div>
           <button
             onClick={() => { setSelectedCategory('All'); setQuery(''); }}
-            className={`rounded-full px-4 py-2 text-sm mr-2 mb-2 ${selectedCategory === 'All' ? 'bg-[#FF6B4A] text-white' : 'bg-[#151A1F]/80 border border-[rgba(255,255,255,0.08)] text-[#F5F5F0]'}`}
+            className={`rounded-full px-3 py-1.5 text-xs mr-2 mb-2 ${selectedCategory === 'All' ? 'bg-[#FF6B4A] text-white' : 'bg-[#151A1F]/80 border border-[rgba(255,255,255,0.08)] text-[#F5F5F0]'}`}
           >
             All
           </button>
@@ -101,7 +103,7 @@ export default function SearchPage() {
             <button
               key={cat}
               onClick={() => { setSelectedCategory(cat); setQuery(''); }}
-              className={`rounded-full px-4 py-2 text-sm mr-2 mb-2 transition-all ${selectedCategory === cat ? 'bg-[#FF6B4A] text-white' : 'bg-[#151A1F]/80 border border-[rgba(255,255,255,0.08)] text-[#F5F5F0]'}`}
+              className={`rounded-full px-3 py-1.5 text-xs mr-2 mb-2 transition-all ${selectedCategory === cat ? 'bg-[#FF6B4A] text-white' : 'bg-[#151A1F]/80 border border-[rgba(255,255,255,0.08)] text-[#F5F5F0]'}`}
             >
               {categoryEmojis[cat] || '📍'} {cat}
             </button>
@@ -130,7 +132,8 @@ export default function SearchPage() {
                   key={spot.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="rounded-3xl bg-[#151A1F]/90 border border-[rgba(255,255,255,0.08)] p-4 flex items-center gap-4"
+                  onClick={() => navigate(`/spot/${spot.id}`)}
+                  className="rounded-2xl bg-[#151A1F]/90 border border-[rgba(255,255,255,0.08)] p-3 flex items-center gap-3 cursor-pointer"
                 >
                   <div className="w-14 h-14 flex-shrink-0 bg-gradient-to-br from-[#FF6B4A]/15 to-[#F5A623]/15 rounded-2xl flex items-center justify-center text-2xl">
                     {categoryEmojis[spot.category] || '📍'}

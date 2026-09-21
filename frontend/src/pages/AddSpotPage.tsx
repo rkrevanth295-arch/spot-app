@@ -80,12 +80,21 @@ export default function AddSpotPage() {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setImageFile(file);
-      const reader = new FileReader();
-      reader.onload = () => setImagePreview(reader.result as string);
-      reader.readAsDataURL(file);
+    if (!file) return;
+    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowed.includes(file.type)) {
+      setError('Use a JPG, PNG, or WebP photo.');
+      return;
     }
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Photo must be under 5MB.');
+      return;
+    }
+    setError('');
+    setImageFile(file);
+    const reader = new FileReader();
+    reader.onload = () => setImagePreview(reader.result as string);
+    reader.readAsDataURL(file);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -158,7 +167,7 @@ export default function AddSpotPage() {
             </button>
             <p className="text-center text-[#8A8F98] text-xs my-2">or tap on the map</p>
             <div className="rounded-3xl overflow-hidden border border-[rgba(255,255,255,0.08)]" style={{ height: '220px' }}>
-              <MapContainer center={pinLocation} zoom={13} style={{ height: '100%', width: '100%' }}>
+              <MapContainer center={pinLocation} zoom={13} zoomControl={false} attributionControl={false} style={{ height: '100%', width: '100%' }}>
                 <TileLayer attribution='&copy; CartoDB' url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
                 <MapClickHandler onMapClick={handleMapTap} />
                 <FlyToLocation location={pinLocation} />

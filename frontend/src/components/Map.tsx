@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import api from '../services/api';
 
 const hyderabadCenter: [number, number] = [17.3850, 78.4867];
 
-interface Spot {
+export interface MapSpot {
   id: string;
   name: string;
   category: string;
@@ -48,150 +48,85 @@ const categoryStyles: { [key: string]: { icon: string; bg: string } } = {
   'First Date Spots': { icon: '💕', bg: '#E91E63' },
 };
 
-const createSpotIcon = (category: string, imageUrl: string | null, isSelected: boolean, index: number, isDimmed: boolean, isMatch: boolean) => {
+function safeCssUrl(url: string | null): string | null {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return null;
+    return parsed.href.replace(/['"<>\\]/g, '');
+  } catch {
+    return null;
+  }
+}
+
+const userIcon = L.divIcon({
+  html: `
+    <div class="user-dot">
+      <span class="user-dot-pulse"></span>
+      <span class="user-dot-core"></span>
+    </div>
+  `,
+  className: 'user-location-marker',
+  iconSize: [28, 28],
+  iconAnchor: [14, 14],
+});
+
+const createSpotIcon = (category: string, imageUrl: string | null, isSelected: boolean, isDimmed: boolean) => {
   const style = categoryStyles[category] || { icon: '📍', bg: '#FF6B4A' };
-  const baseSize = isSelected ? 56 : 40;
-  const ringSize = isSelected ? 3 : 2;
-  const badgeSize = isSelected ? 22 : 18;
-  const glowSize = isSelected ? 20 : 12;
-
-  const backgroundStyle = imageUrl
-    ? `background-image: url('${imageUrl}'); background-size: cover; background-position: center;`
-    : `background: linear-gradient(135deg, ${style.bg}CC, ${style.bg}66);`;
+  const size = isSelected ? 38 : 28;
+  const safeUrl = safeCssUrl(imageUrl);
+  const fill = safeUrl
+    ? `background-image:url("${safeUrl}");background-size:cover;background-position:center;`
+    : `background:linear-gradient(135deg,${style.bg},${style.bg}99);`;
 
   return L.divIcon({
-    html: `
-      <div style="
-        position: relative;
-        width: ${baseSize}px;
-        height: ${baseSize}px;
-        border-radius: 50%;
-        border: ${ringSize}px solid ${style.bg};
-        color: ${style.bg};
-        box-shadow: 0 0 ${glowSize}px ${style.bg}80, 0 0 4px rgba(0,0,0,0.4);
-        ${backgroundStyle}
-        overflow: visible;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        --marker-delay: ${Math.min(index * 28, 420)}ms;
-      " class="spot-marker ${isDimmed ? 'spot-marker--dimmed' : ''} ${isMatch ? 'spot-marker--match' : ''}">
-        ${!imageUrl ? `<span style="font-size: ${isSelected ? '24px' : '18px'}; line-height: 1;">${style.icon}</span>` : ''}
-        <div style="
-          position: absolute;
-          bottom: -3px;
-          right: -3px;
-          width: ${badgeSize}px;
-          height: ${badgeSize}px;
-          border-radius: 50%;
-          background: ${style.bg};
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border: 2px solid #0B0E11;
-          font-size: ${isSelected ? '11px' : '9px'};
-          line-height: 1;
-          color: white;
-        ">
-          ${style.icon}
-        </div>
-      </div>
-    `,
+    html: `<div class="spot-marker${isDimmed ? ' spot-marker--dimmed' : ''}${isSelected ? ' spot-marker--selected' : ''}" style="width:${size}px;height:${size}px;border:2px solid ${style.bg};${fill}">${!safeUrl ? `<span>${style.icon}</span>` : ''}</div>`,
     className: 'spot-photo-marker',
-    iconSize: [baseSize + ringSize * 2, baseSize + ringSize * 2],
-    iconAnchor: [(baseSize + ringSize * 2) / 2, (baseSize + ringSize * 2) / 2],
-    popupAnchor: [0, -baseSize / 2],
-  });
-};
-
-const createUserIcon = () => {
-  return L.divIcon({
-    html: `
-      <div style="position: relative; width: 36px; height: 36px;">
-        <div style="position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(circle, #4AE0C4 0%, #4AE0C455 40%, transparent 70%); animation: userPulse 2s infinite;"></div>
-        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 20px; z-index: 2;">🧍</div>
-        <style>
-          @keyframes userPulse { 0% { transform: scale(0.7); opacity: 1; } 70% { transform: scale(1.4); opacity: 0; } 100% { transform: scale(1.4); opacity: 0; } }
-        </style>
-      </div>
-    `,
-    className: 'user-location-marker',
-    iconSize: [36, 36],
-    iconAnchor: [18, 18],
-    popupAnchor: [0, -18],
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
   });
 };
 
 function FlyToLocation({ location }: { location?: { lat: number; lng: number } | null }) {
   const map = useMap();
   useEffect(() => {
-    if (location) {
-      map.flyTo([location.lat, location.lng], 16, { duration: 1.5 });
-    }
+    if (location) map.flyTo([location.lat, location.lng], 16, { duration: 0.6 });
   }, [location, map]);
   return null;
 }
 
-function FocusOnCategory({ spot }: { spot?: Spot }) {
+function FocusOnCategory({ spot }: { spot?: MapSpot }) {
   const map = useMap();
   useEffect(() => {
-    if (spot) map.flyTo([spot.latitude, spot.longitude], Math.max(map.getZoom(), 14), { duration: 0.35 });
+    if (spot) map.flyTo([spot.latitude, spot.longitude], Math.max(map.getZoom(), 14), { duration: 0.28 });
   }, [map, spot]);
   return null;
 }
 
-function MapResetControl() {
-  const map = useMap();
-  return (
-    <button
-      type="button"
-      aria-label="Reset map to Hyderabad"
-      className="map-reset-control"
-      onClick={() => map.flyTo(hyderabadCenter, 14, { duration: 0.35 })}
-    >
-      ↺
-    </button>
-  );
-}
-
-const loadingPinIcon = L.divIcon({
-  html: '<span class="map-loading-pin"></span>',
-  className: 'map-loading-pin-wrapper',
-  iconSize: [18, 18],
-  iconAnchor: [9, 9],
-});
-
 const Map: React.FC<{
   selectedCategory?: string;
   searchQuery?: string;
-  compact?: boolean;
-  onPinTap?: (spot: Spot) => void;
+  spots?: MapSpot[];
+  onPinTap?: (spot: MapSpot) => void;
   userLocation?: { lat: number; lng: number } | null;
-}> = ({ selectedCategory = 'All', searchQuery = '', compact = false, onPinTap, userLocation }) => {
-  const [spots, setSpots] = useState<Spot[]>([]);
+}> = ({ selectedCategory = 'All', searchQuery = '', spots: spotsProp, onPinTap, userLocation }) => {
+  const [fetchedSpots, setFetchedSpots] = useState<MapSpot[]>([]);
   const [selectedSpotId, setSelectedSpotId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let url = '/spots/';
-    const params: string[] = [];
-    if (searchQuery.trim()) {
-      url = '/spots/search/';
-      params.push(`q=${encodeURIComponent(searchQuery.trim())}`);
-    } else {
-      params.push('limit=200');
-    }
-    if (params.length > 0) url += '?' + params.join('&');
+    if (spotsProp) return;
+    let url = '/spots/?limit=200';
+    if (searchQuery.trim()) url = `/spots/search/?q=${encodeURIComponent(searchQuery.trim())}`;
     let mounted = true;
-    const request = window.setTimeout(() => {
-      if (mounted) setLoading(true);
+    const timer = window.setTimeout(() => {
       api.get(url)
-        .then((res: any) => { if (mounted) setSpots(Array.isArray(res.data) ? res.data : []); })
-        .catch(() => { if (mounted) setSpots([]); })
-        .finally(() => { if (mounted) setLoading(false); });
-    }, searchQuery.trim() ? 250 : 0);
-    return () => { mounted = false; window.clearTimeout(request); };
-  }, [selectedCategory, searchQuery]);
+        .then((res) => { if (mounted) setFetchedSpots(Array.isArray(res.data) ? res.data : []); })
+        .catch(() => { if (mounted) setFetchedSpots([]); });
+    }, searchQuery.trim() ? 200 : 0);
+    return () => { mounted = false; window.clearTimeout(timer); };
+  }, [searchQuery, spotsProp]);
+
+  const spots = spotsProp ?? fetchedSpots;
 
   const validSpots = useMemo(() => spots.filter((spot) => {
     const latitude = Number(spot.latitude);
@@ -200,64 +135,50 @@ const Map: React.FC<{
       && Math.abs(latitude) <= 90 && Math.abs(longitude) <= 180;
   }), [spots]);
 
-  const matchingSpots = useMemo(() => selectedCategory === 'All' || searchQuery.trim()
-    ? validSpots
-    : validSpots.filter((spot) => spot.category === selectedCategory), [validSpots, selectedCategory, searchQuery]);
+  const matchingSpots = useMemo(() => (
+    selectedCategory === 'All' || searchQuery.trim()
+      ? validSpots
+      : validSpots.filter((spot) => spot.category === selectedCategory)
+  ), [validSpots, selectedCategory, searchQuery]);
 
   return (
-    <div style={{ position: 'relative', height: '100%', width: '100%' }}>
-      <MapContainer
-        center={hyderabadCenter}
-        zoom={14}
-        style={{ height: '100%', width: '100%', zIndex: 1 }}
-        dragging={true}
-        touchZoom={true}
-        scrollWheelZoom={true}
-        zoomControl={true}
-      >
-        <FlyToLocation location={userLocation} />
-        {selectedCategory !== 'All' && !searchQuery.trim() && <FocusOnCategory spot={matchingSpots[0]} />}
-        <MapResetControl />
-        <TileLayer
-          attribution='&copy; OpenStreetMap contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          className="dark-map-tiles"
-        />
-        {loading && [0, 1, 2, 3].map((index) => (
-          <Marker key={`loading-${index}`} position={[17.36 + index * 0.015, 78.46 + index * 0.018]} icon={loadingPinIcon} interactive={false} />
-        ))}
-        {validSpots.map((spot, index) => {
-          const isMatch = selectedCategory === 'All' || Boolean(searchQuery.trim()) || spot.category === selectedCategory;
-          return (
+    <MapContainer
+      center={hyderabadCenter}
+      zoom={13}
+      style={{ height: '100%', width: '100%' }}
+      dragging
+      touchZoom
+      scrollWheelZoom
+      doubleClickZoom
+      zoomControl={false}
+      attributionControl={false}
+    >
+      <FlyToLocation location={userLocation} />
+      {selectedCategory !== 'All' && !searchQuery.trim() && <FocusOnCategory spot={matchingSpots[0]} />}
+      <TileLayer
+        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+      />
+      {validSpots.map((spot) => {
+        const isMatch = selectedCategory === 'All' || Boolean(searchQuery.trim()) || spot.category === selectedCategory;
+        return (
           <Marker
             key={spot.id}
             position={[spot.latitude, spot.longitude]}
-            icon={createSpotIcon(spot.category, spot.image_url, selectedSpotId === spot.id, index, !isMatch, isMatch && selectedCategory !== 'All')}
+            icon={createSpotIcon(spot.category, spot.image_url, selectedSpotId === spot.id, !isMatch)}
             eventHandlers={{
               click: () => {
                 setSelectedSpotId(spot.id);
-                if (onPinTap) onPinTap(spot);
+                onPinTap?.(spot);
               },
             }}
-          >
-            <Popup>
-              <div style={{ fontFamily: 'Inter, sans-serif', color: '#F5F5F0', fontSize: '13px' }}>
-                <strong>{spot.name}</strong>
-                <br />
-                <span style={{ color: '#8A8F98', fontSize: '11px' }}>{spot.category}</span>
-              </div>
-            </Popup>
-          </Marker>
-          );
-        })}
-        {userLocation && (
-          <Marker position={[userLocation.lat, userLocation.lng]} icon={createUserIcon()} zIndexOffset={1000}>
-            <Popup>You are here 📍</Popup>
-          </Marker>
-        )}
-      </MapContainer>
-    </div>
+          />
+        );
+      })}
+      {userLocation && (
+        <Marker position={[userLocation.lat, userLocation.lng]} icon={userIcon} zIndexOffset={1000} />
+      )}
+    </MapContainer>
   );
 };
 
-export default Map;
+export default React.memo(Map);

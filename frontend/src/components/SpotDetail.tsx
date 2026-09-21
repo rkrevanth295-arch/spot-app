@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { Bookmark, Share2, Navigation, MapPin, X, CheckCircle, Loader2 } from 'lucide-react';
 import api from '../services/api';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 interface Spot {
@@ -24,6 +25,7 @@ export default function SpotDetail({ spot, onClose }: { spot: Spot; onClose: () 
   const [checkingIn, setCheckingIn] = useState(false);
   const [scrollOffset, setScrollOffset] = useState(0);
   const { user } = useAuth();
+  const navigate = useNavigate();
   const reduceMotion = useReducedMotion();
   const icon = categoryIcons[spot.category] || '📍';
 
@@ -39,7 +41,7 @@ export default function SpotDetail({ spot, onClose }: { spot: Spot; onClose: () 
   }, [spot.id, user]);
 
   async function handleSave() {
-    if (!user) return;
+    if (!user) { navigate('/login'); return; }
     try {
       if (isSaved) {
         await api.delete(`/spots/${spot.id}/save`);
@@ -60,7 +62,7 @@ export default function SpotDetail({ spot, onClose }: { spot: Spot; onClose: () 
   }
 
   async function handleCheckIn() {
-    if (!user) return;
+    if (!user) { navigate('/login'); return; }
     setCheckingIn(true);
     if (!navigator.geolocation) {
       alert('GPS not available');
@@ -90,9 +92,9 @@ export default function SpotDetail({ spot, onClose }: { spot: Spot; onClose: () 
     >
       <div className="relative">
         {spot.image_url ? (
-          <motion.img animate={{ y: Math.min(scrollOffset * 0.16, 34) }} transition={{ duration: 0.1 }} src={spot.image_url} alt={spot.name} className="w-full h-72 object-cover" />
+          <motion.img animate={{ y: Math.min(scrollOffset * 0.16, 34) }} transition={{ duration: 0.1 }} src={spot.image_url} alt={spot.name} className="w-full h-52 object-cover" />
         ) : (
-          <div className="w-full h-72 bg-[#151A1F] flex items-center justify-center text-6xl">{icon}</div>
+          <div className="w-full h-52 bg-[#151A1F] flex items-center justify-center text-5xl">{icon}</div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-[#0B0E11] via-transparent to-transparent" />
         <button onClick={onClose} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/50 backdrop-blur flex items-center justify-center text-white">

@@ -111,9 +111,9 @@ export default function SpotPage() {
     <div className="min-h-screen bg-[#0B0E11] text-[#F5F5F0] pb-24">
       <div className="relative">
         {spot.image_url ? (
-          <img src={spot.image_url} alt={spot.name} className="w-full h-72 object-cover" />
+          <img src={spot.image_url} alt={spot.name} className="w-full h-52 object-cover" />
         ) : (
-          <div className="w-full h-72 bg-[#151A1F] flex items-center justify-center text-6xl">📍</div>
+          <div className="w-full h-52 bg-[#151A1F] flex items-center justify-center text-5xl">📍</div>
         )}
         <button
           onClick={() => navigate(-1)}

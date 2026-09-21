@@ -46,15 +46,19 @@ const AIChatWidget: React.FC = () => {
 
   const sendMessage = async () => {
     if (!input.trim()) return;
-    const userMsg = input.trim();
+    const userMsg = input.trim().slice(0, 400);
     setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
     setInput('');
     setLoading(true);
     try {
       const res = await api.post('/ai/chat', { message: userMsg });
       setMessages(prev => [...prev, { role: 'ai', text: cleanText(res.data.reply) }]);
-    } catch {
-      setMessages(prev => [...prev, { role: 'ai', text: 'Sorry, AI is taking a nap. Try again!' }]);
+    } catch (err: any) {
+      const status = err?.response?.status;
+      const text = status === 401
+        ? 'Log in to chat with SPOT AI.'
+        : 'Sorry, AI is taking a nap. Try again!';
+      setMessages(prev => [...prev, { role: 'ai', text }]);
     }
     setLoading(false);
   };
@@ -65,9 +69,10 @@ const AIChatWidget: React.FC = () => {
       <motion.button
         onClick={() => setIsOpen(!isOpen)}
         whileTap={reduceMotion ? undefined : { scale: 0.97 }}
-        className="fixed top-[68px] right-36 z-[1000] bg-[#151A1F]/80 backdrop-blur-xl rounded-full px-4 py-2 border border-[rgba(255,255,255,0.08)] flex items-center gap-1.5 text-sm text-[#F5F5F0]"
+        aria-label="Open SPOT AI"
+        className="fixed bottom-[4.75rem] right-3 z-[800] w-11 h-11 rounded-full bg-[#151A1F]/90 backdrop-blur-xl border border-white/[0.08] flex items-center justify-center shadow-card"
       >
-        <MessageCircle className="w-3.5 h-3.5 text-[#FF6B4A]" /> AI
+        <MessageCircle className="w-4 h-4 text-[#FF6B4A]" />
       </motion.button>
 
       {/* Chat panel */}
@@ -115,6 +120,7 @@ const AIChatWidget: React.FC = () => {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
                 placeholder="Ask about spots..."
+                maxLength={400}
                 className="flex-1 bg-[#0B0E11] px-3 py-2 rounded-xl text-sm text-[#F5F5F0] outline-none"
               />
               <motion.button whileTap={reduceMotion ? undefined : { scale: 0.97 }} onClick={sendMessage} className="w-10 h-10 rounded-xl bg-[#FF6B4A] flex items-center justify-center">

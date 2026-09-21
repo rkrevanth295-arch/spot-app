@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Check, X, Loader2 } from 'lucide-react';
+import { Navigate } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
 import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 interface Spot {
   id: string;
@@ -15,10 +17,20 @@ interface Spot {
 }
 
 export default function AdminPage() {
+  const { user, loading: authLoading } = useAuth();
   const [pendingSpots, setPendingSpots] = useState<Spot[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => { fetchPending(); }, []);
+  useEffect(() => {
+    if (user?.role === 'admin') fetchPending();
+  }, [user]);
+
+  if (authLoading) {
+    return <div className="min-h-screen bg-[#0B0E11] flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-[#FF6B4A]" /></div>;
+  }
+  if (!user || user.role !== 'admin') {
+    return <Navigate to="/" replace />;
+  }
 
   async function fetchPending() {
     setLoading(true);
