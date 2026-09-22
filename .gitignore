@@ -2,7 +2,15 @@ __pycache__/
 *.pyc
 venv/
 node_modules/
+
+# Env files
 .env
-.DS_Store
+.env.*
+**/.env
+**/.env.*
+!*.env.example
+
+# Secrets / dumps
 render_dump.sql
 *.sql
+.DS_Store
