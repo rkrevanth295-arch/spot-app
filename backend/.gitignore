@@ -1,0 +1,24 @@
+# Environment
+.env
+.env.local
+.venv
+venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local
+*.db
+*.sqlite3
+*.log
